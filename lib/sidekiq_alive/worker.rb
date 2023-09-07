@@ -8,12 +8,18 @@ module SidekiqAlive
     # Passing the hostname argument it's only for debugging enqueued jobs
     def perform(_hostname = SidekiqAlive.hostname)
       # Checks if custom liveness probe passes should fail or return false
-      return unless config.custom_liveness_probe.call
+      unless config.custom_liveness_probe.call
+        Rails.logger.error("SidekiqAlive: failed liveness probe, returning")
+        return
+      end
 
       # Writes the liveness in Redis
       write_living_probe
       # schedules next living probe
       self.class.perform_in(config.time_to_live / 2, current_hostname)
+    rescue => e
+      Rails.logger.error("SidekiqAlive: exception raised: #{e}")
+      raise e
     end
 
     def write_living_probe
