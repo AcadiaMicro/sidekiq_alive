@@ -13,10 +13,7 @@ module SidekiqAlive
     def perform(_hostname = SidekiqAlive.hostname)
       Timmeout.timeout(TIMEOUT) do
         # Checks if custom liveness probe passes should fail or return false
-        unless config.custom_liveness_probe.call
-          Rails.logger.error("SidekiqAlive: failed liveness probe, returning")
-          return
-        end
+        return unless config.custom_liveness_probe.call
 
         # Writes the liveness in Redis
         write_living_probe
@@ -24,7 +21,7 @@ module SidekiqAlive
         self.class.perform_in(config.time_to_live / 2, current_hostname)
       end
     rescue => e
-      Rails.logger.error("SidekiqAlive: exception raised: #{e}")
+      Rails.logger.error("SidekiqAlive: #{e}")
       raise e
     end
 
