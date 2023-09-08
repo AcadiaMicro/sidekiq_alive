@@ -11,7 +11,7 @@ module SidekiqAlive
 
     # Passing the hostname argument it's only for debugging enqueued jobs
     def perform(_hostname = SidekiqAlive.hostname)
-      Timmeout.timeout(TIMEOUT) do
+      Timeout.timeout(TIMEOUT) do
         # Checks if custom liveness probe passes should fail or return false
         return unless config.custom_liveness_probe.call
 
